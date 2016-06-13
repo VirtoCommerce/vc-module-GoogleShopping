@@ -1,12 +1,11 @@
-﻿using VirtoCommerce.Platform.Core.Notifications;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
 using System.Web.Http.Description;
 using System.Collections.Generic;
 using Microsoft.Practices.ObjectBuilder2;
-using VirtoCommerce.Platform.Core.Security;
+using VirtoCommerce.Platform.Core.Web.Security;
 
 #region Google usings
 using Google.Apis.ShoppingContent.v2;
@@ -21,7 +20,7 @@ using VirtoCommerce.Platform.Core.PushNotifications;
 
 namespace GoogleShopping.MerchantModule.Web.Controllers.Api
 {
-	[ApiExplorerSettings(IgnoreApi=true)]
+    [ApiExplorerSettings(IgnoreApi=true)]
     [RoutePrefix("api/g")]
     [CheckPermission(Permission = PredefinedPermissions.Manage)]
     public class GoogleShoppingController : ApiController

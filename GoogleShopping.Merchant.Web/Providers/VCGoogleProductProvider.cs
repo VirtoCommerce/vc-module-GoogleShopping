@@ -1,15 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using Google.Apis.ShoppingContent.v2.Data;
+﻿using Google.Apis.ShoppingContent.v2.Data;
 using GoogleShopping.MerchantModule.Web.Converters;
 using Microsoft.Practices.ObjectBuilder2;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using VirtoCommerce.Domain.Catalog.Model;
 using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Pricing.Model;
 using VirtoCommerce.Domain.Pricing.Services;
-using VirtoCommerce.Platform.Core.Asset;
-using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.Assets;
 
 namespace GoogleShopping.MerchantModule.Web.Providers
 {

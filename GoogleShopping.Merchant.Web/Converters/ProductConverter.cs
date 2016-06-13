@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Omu.ValueInjecter;
 using System.Linq;
-using Omu.ValueInjecter;
-using moduleModel = VirtoCommerce.Domain.Catalog.Model;
+using VirtoCommerce.Platform.Core.Assets;
 using googleModel = Google.Apis.ShoppingContent.v2.Data;
-using VirtoCommerce.Platform.Core.Asset;
+using moduleModel = VirtoCommerce.Domain.Catalog.Model;
 
 namespace GoogleShopping.MerchantModule.Web.Converters
 {
