@@ -1,7 +1,6 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
+﻿using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using System.Web.Hosting;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.ShoppingContent.v2;
@@ -18,8 +17,8 @@ namespace GoogleShopping.MerchantModule.Web.Providers
         {
             if (_contentService == null)
             {
-                string appPath = System.Web.Hosting.HostingEnvironment.ApplicationPhysicalPath;
-                var key = string.Format(@"{0}{1}{2}", appPath, Path.DirectorySeparatorChar, keyPath);
+                string appPath = HostingEnvironment.ApplicationPhysicalPath;
+                var key = Path.Combine(appPath, keyPath);
 
                 var certificate = new X509Certificate2(key, "notasecret", X509KeyStorageFlags.Exportable);
 
