@@ -56,12 +56,7 @@ namespace GoogleShopping.MerchantModule.Web.Controllers.Api
         [Route("products/sync/{productId}")]
         public IHttpActionResult SyncProduct(string productId)
         {
-            var updatedProducts = _productProvider.GetProductUpdates(new[] { productId });
-            foreach (var product in updatedProducts)
-            {
-                var productUpdateRequest = _contentService.Products.Insert(product, _settingsManager.MerchantId);
-                productUpdateRequest.Execute();
-            }
+            PerformOneByOneProductUpdate(new [] { productId });
 
             return Ok();
         }
@@ -99,15 +94,9 @@ namespace GoogleShopping.MerchantModule.Web.Controllers.Api
                 return StatusCode(HttpStatusCode.NoContent);
             }
 
-            var products = _productProvider.GetProductUpdates(outdatedProductIds);
-            foreach (var product in products)
-            {
-                var productUpdateRequest = _contentService.Products.Insert(product, _settingsManager.MerchantId);
-                productUpdateRequest.Execute();
-            }
+            PerformOneByOneProductUpdate(outdatedProductIds);
 
             return Ok();
-
         }
 
         /// <summary>
@@ -120,18 +109,18 @@ namespace GoogleShopping.MerchantModule.Web.Controllers.Api
         [Route("products/sync/batch/outdated")]
         public IHttpActionResult BatchOutdatedProducts()
         {
-            var response = _contentService.Productstatuses.List(_settingsManager.MerchantId).Execute();
+            var productStatusesResponse = _contentService.Productstatuses.List(_settingsManager.MerchantId).Execute();
 
-            var outdated = GetOutdatedProductIds(response.Resources);
-            if (!outdated.Any())
+            var outdatedProductIds = GetOutdatedProductIds(productStatusesResponse.Resources);
+            if (!outdatedProductIds.Any())
             {
                 return StatusCode(HttpStatusCode.NoContent);
             }
 
-            var productsUpdateRequest = _productProvider.GetProductsBatchRequest(outdated);
-            productsUpdateRequest.Entries.ForEach(item => item.MerchantId = _settingsManager.MerchantId);
-            var res = _contentService.Products.Custombatch(productsUpdateRequest).Execute();
-            return Ok(res);
+            var productsUpdateRequest = _productProvider.GetProductsBatchRequest(outdatedProductIds);
+            var response = PerformBatchProductsUpdate(productsUpdateRequest);
+
+            return Ok(response);
         }
 
         /// <summary>
@@ -151,8 +140,8 @@ namespace GoogleShopping.MerchantModule.Web.Controllers.Api
                 return StatusCode(HttpStatusCode.NoContent);
             }
 
-            productsUpdateRequest.Entries.ForEach(item => item.MerchantId = _settingsManager.MerchantId);
-            var res = _contentService.Products.Custombatch(productsUpdateRequest).Execute();
+            var res = PerformBatchProductsUpdate(productsUpdateRequest);
+
             return Ok(res);
         }
 
@@ -167,14 +156,14 @@ namespace GoogleShopping.MerchantModule.Web.Controllers.Api
         [Route("products/sync/batch/{catalogId}/{categoryId}")]
         public IHttpActionResult BatchCategoryProducts(string catalogId, string categoryId)
         {
-            var products = _productProvider.GetCatalogProductsBatchRequest(catalogId, categoryId);
-            if (!products.Entries.Any())
+            var productsUpdateRequest = _productProvider.GetCatalogProductsBatchRequest(catalogId, categoryId);
+            if (!productsUpdateRequest.Entries.Any())
             {
                 return StatusCode(HttpStatusCode.NoContent);
             }
 
-            products.Entries.ForEach(item => item.MerchantId = _settingsManager.MerchantId);
-            var res = _contentService.Products.Custombatch(products).Execute();
+            var res = PerformBatchProductsUpdate(productsUpdateRequest);
+
             return Ok(new[] { res.Entries.Count });
         }
 
@@ -192,6 +181,29 @@ namespace GoogleShopping.MerchantModule.Web.Controllers.Api
             }
 
             return outdatedProductIds;
+        }
+
+        private void PerformOneByOneProductUpdate(IEnumerable<string> productIds)
+        {
+            var updatedProducts = _productProvider.GetProductUpdates(productIds);
+            foreach (var product in updatedProducts)
+            {
+                var productUpdateRequest = _contentService.Products.Insert(product, _settingsManager.MerchantId);
+                productUpdateRequest.Execute();
+            }
+        }
+
+        private ProductsCustomBatchResponse PerformBatchProductsUpdate(ProductsCustomBatchRequest productsUpdateRequest)
+        {
+            foreach (var entry in productsUpdateRequest.Entries)
+            {
+                entry.MerchantId = _settingsManager.MerchantId;
+            }
+
+            var request = _contentService.Products.Custombatch(productsUpdateRequest);
+            var response = request.Execute();
+
+            return response;
         }
     }
 }
