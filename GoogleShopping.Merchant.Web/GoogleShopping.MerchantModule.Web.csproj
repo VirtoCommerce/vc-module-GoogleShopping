@@ -168,6 +168,8 @@
     <Compile Include="Helpers\Implementations\ExpiredDateTimeProvider.cs" />
     <Compile Include="Helpers\Implementations\DefaultDateTimeProvider.cs" />
     <Compile Include="Helpers\Interfaces\IDateTimeProvider.cs" />
+    <Compile Include="Providers\ConfigBasedGoogleMerchantCenterCredentialsProvider.cs" />
+    <Compile Include="Providers\IGoogleMerchantCenterCredentialsProvider.cs" />
     <Compile Include="Services\ShoppingManagerSettings.cs" />
     <Compile Include="Model\Notifications\ProductSyncNotifyEvent.cs" />
     <Compile Include="Model\ProductsSyncJob.cs" />
