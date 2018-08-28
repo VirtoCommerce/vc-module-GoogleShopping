@@ -164,7 +164,7 @@ namespace GoogleShopping.MerchantModule.Web.Controllers.Api
 
             var res = PerformBatchProductsUpdate(productsUpdateRequest);
 
-            return Ok(new[] { res.Entries.Count });
+            return Ok(res);
         }
 
         private ICollection<string> GetOutdatedProductIds(IEnumerable<ProductStatus> productStatuses)
