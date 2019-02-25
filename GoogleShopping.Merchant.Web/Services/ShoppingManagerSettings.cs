@@ -6,20 +6,17 @@ namespace GoogleShopping.MerchantModule.Web.Services
     public class ShoppingManagerSettings : IShoppingSettings
     {
         private readonly string _merchantIdPropertyName;
-        private readonly string _code;
-        private readonly string _description;
-        private readonly string _logoUrl;
 
         private readonly ISettingsManager _settingsManager; 
 
         public ShoppingManagerSettings(ISettingsManager settingsManager, string merchantIdPropertyName, string code, string description, string logoUrl)
         {
             _merchantIdPropertyName = merchantIdPropertyName;
-            _code = code;
-            _description = description;
-            _logoUrl = logoUrl;
-
             _settingsManager = settingsManager;
+
+            Code = code;
+            Description = description;
+            LogoUrl = logoUrl;
         }
 
         public ulong MerchantId
@@ -31,19 +28,10 @@ namespace GoogleShopping.MerchantModule.Web.Services
             }
         }
 
-        public string Code
-        {
-            get { return _code; }
-        }
+        public string Code { get; }
 
-        public string Description
-        {
-            get { return _description; }
-        }
+        public string Description { get; }
 
-        public string LogoUrl
-        {
-            get { return _logoUrl; }
-        }
+        public string LogoUrl { get; }
     }
 }

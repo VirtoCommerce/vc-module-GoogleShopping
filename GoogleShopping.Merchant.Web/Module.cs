@@ -13,6 +13,10 @@ namespace GoogleShopping.MerchantModule.Web
     {
         private const string _merchantIdPropertyName = "GoogleShopping.Merchant.MerchantId";
 
+        private const string ServiceAccountPropertyName = "GoogleShopping:MerchantAccount:Email";
+        private const string CertificatePathPropertyName = "GoogleShopping:MerchantAccount:Certificate.Path";
+        private const string CertificatePassphrasePropertyName = "GoogleShopping:MerchantAccount:Certificate.Passphrase";
+
         private readonly IUnityContainer _container;
 
         public Module(IUnityContainer container)
@@ -31,8 +35,10 @@ namespace GoogleShopping.MerchantModule.Web
             var googleShoppingLogoUrl = settingsManager.GetValue("GoogleShopping.Merchant.LogoUrl", string.Empty);
 
             var googleShoppingManager = new ShoppingManagerSettings(settingsManager, _merchantIdPropertyName, googleShoppingCode, googleShoppingDescription, googleShoppingLogoUrl);
+            var credentialsProvider = new ConfigBasedGoogleMerchantCenterCredentialsProvider(ServiceAccountPropertyName, 
+                CertificatePathPropertyName, CertificatePassphrasePropertyName);
 
-            _container.RegisterInstance<IGoogleContentServiceProvider>(new ServiceGoogleContentServiceProvider());
+            _container.RegisterInstance<IGoogleContentServiceProvider>(new ServiceGoogleContentServiceProvider(credentialsProvider));
             _container.RegisterInstance<IDateTimeProvider>(new DefaultDateTimeProvider());
             _container.RegisterInstance<IShoppingSettings>(googleShoppingManager);
             _container.RegisterType<IGoogleProductProvider, VCGoogleProductProvider>(new ContainerControlledLifetimeManager());

@@ -9,6 +9,7 @@ using VirtoCommerce.Domain.Catalog.Services;
 using VirtoCommerce.Domain.Pricing.Model;
 using VirtoCommerce.Domain.Pricing.Services;
 using VirtoCommerce.Platform.Core.Assets;
+using GooglePrice = Google.Apis.ShoppingContent.v2.Data.Price;
 
 namespace GoogleShopping.MerchantModule.Web.Providers
 {
@@ -29,57 +30,81 @@ namespace GoogleShopping.MerchantModule.Web.Providers
 
         public IEnumerable<Product> GetProductUpdates(IEnumerable<string> ids)
         {
-            Collection<Product> retVal = null;
+            var retVal = new Collection<Product>();
 
             var items = _itemService.GetByIds(ids.ToArray(), ItemResponseGroup.ItemLarge);
-            items.ForEach(product =>
+            foreach (var product in items)
             {
                 var converted = product.ToGoogleModel(_assetUrlResolver);
-                var prices = _pricingService.EvaluateProductPrices(new PriceEvaluationContext { ProductIds = new string[] { converted.Id } });
-                if (prices != null)
-                {
-                    converted.Price = prices.First(x => x.Currency == "USD").ToGoogleModel();
-                    if (retVal == null)
-                        retVal = new Collection<Product>();
-                    retVal.Add(converted);
-                }
-            });
+                if (!TryGetProductPrice(converted.Id, out var productPrice))
+                    continue;
+
+                converted.Price = productPrice;
+                retVal.Add(converted);
+            }
+
             return retVal;
         }
 
         public ProductsCustomBatchRequest GetProductsBatchRequest(IEnumerable<string> ids)
         {
-            var retVal = new ProductsCustomBatchRequest();
-            var products = GetProductUpdates(ids);
-            retVal.Entries = new List<ProductsCustomBatchRequestEntry>();
-            foreach(var prod in products.Select((value, index) => new {Value = value, Index = index}))
+            var retVal = new ProductsCustomBatchRequest
             {
-                var val = prod.Value.ToBatchEntryModel();
-                val.BatchId = prod.Index+1;
-                retVal.Entries.Add(val); 
+                Entries = new List<ProductsCustomBatchRequestEntry>()
             };
+
+            var products = GetProductUpdates(ids);
+            foreach (var product in products.Select((value, index) => new { Value = value, Index = index }))
+            {
+                var productEntry = product.Value.ToBatchEntryModel();
+                productEntry.BatchId = product.Index + 1;
+                retVal.Entries.Add(productEntry); 
+            }
+
             return retVal;
         }
 
         public ProductsCustomBatchRequest GetCatalogProductsBatchRequest(string catalogId, string categoryId = "")
         {
-            var result = _catalogSearchService.Search(new SearchCriteria { CatalogId = catalogId, CategoryId = categoryId, ResponseGroup = SearchResponseGroup.WithProducts | SearchResponseGroup.WithVariations });
-            var retVal = new ProductsCustomBatchRequest();
+            var retVal = new ProductsCustomBatchRequest
+            {
+                Entries = new List<ProductsCustomBatchRequestEntry>()
+            };
+
+            var searchCriteria = new SearchCriteria
+            {
+                CatalogId = catalogId,
+                CategoryId = categoryId,
+                ResponseGroup = SearchResponseGroup.WithProducts | SearchResponseGroup.WithVariations
+            };
+            var result = _catalogSearchService.Search(searchCriteria);
+
             foreach (var product in result.Products.Select((value, index) => new { Value = value, Index = index }))
             {
                 var converted = product.Value.ToGoogleModel(_assetUrlResolver);
-                var prices = _pricingService.EvaluateProductPrices(new PriceEvaluationContext { ProductIds = new string[] { converted.Id } });
-                if (prices != null)
-                {
-                    converted.Price = prices.First(x => x.Currency == "USD").ToGoogleModel();
-                    if (retVal.Entries == null)
-                        retVal.Entries = new List<ProductsCustomBatchRequestEntry>();
-                    var val = converted.ToBatchEntryModel();
-                    val.BatchId = product.Index + 1;
-                    retVal.Entries.Add(val);
-                }
+                if (!TryGetProductPrice(converted.Id, out var productPrice))
+                    continue;
+
+                converted.Price = productPrice;
+
+                var val = converted.ToBatchEntryModel();
+                val.BatchId = product.Index + 1;
+                retVal.Entries.Add(val);
             };
             return retVal;
+        }
+
+        private bool TryGetProductPrice(string productId, out GooglePrice productPrice)
+        {
+            var prices = _pricingService.EvaluateProductPrices(new PriceEvaluationContext { ProductIds = new string[] { productId } });
+            if (prices == null)
+            {
+                productPrice = null;
+                return false;
+            }
+
+            productPrice = prices.First(x => x.Currency == "USD").ToGoogleModel();
+            return true;
         }
     }
 }
